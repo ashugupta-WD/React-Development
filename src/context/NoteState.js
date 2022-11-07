@@ -4,8 +4,11 @@ import { useState } from 'react'
 const NoteState = (props) => {
     const [notesList, setnotesList] = useState([]);
     const [editNoteId, seteditNoteId] = useState(null);
+    const [isLoading, setisLoading] = useState(false);
+    const [alertMessage, setalertMessage] = useState(null);
 
     async function fetchAllNotes() {
+        setisLoading(true);
         let response;
         try {
             await fetch(`http://localhost:5000/fetchnotes`, {
@@ -16,11 +19,13 @@ const NoteState = (props) => {
         } catch (error) {
             console.log(error);
         }
+        setisLoading(false);
         setnotesList(response);
     }
 
     async function addNote(e) {
         e.preventDefault();
+        setisLoading(true);
         const note = document.getElementById('noteForm');
         const formData = new FormData(note);
         const obj = Object.fromEntries(formData.entries());
@@ -37,16 +42,18 @@ const NoteState = (props) => {
         } catch (error) {
             console.log(error);
         }
-        console.log(response);
-        // setnotesList((notesList) => [...notesList, obj])
+        setalertMessage(response.msg);
+        setTimeout(() => {
+            setalertMessage(null);
+        }, 1500);
         fetchAllNotes();
         document.getElementById('noteText').value = '';
         document.getElementById('noteTitle').value = '';
     }
 
     async function deleteNote(e) {
+        setisLoading(true);
         let data = { id: (e.target.id).slice(1) }
-        // eslint-disable-next-line
         let response;
         try {
             await fetch(`http://localhost:5000/deletenote`, {
@@ -59,6 +66,10 @@ const NoteState = (props) => {
         } catch (error) {
             console.log(error);
         }
+        setalertMessage(response.msg);
+        setTimeout(() => {
+            setalertMessage(null);
+        }, 1500);
         fetchAllNotes();
     }
 
@@ -69,6 +80,7 @@ const NoteState = (props) => {
 
     async function editNote(e) {
         e.preventDefault();
+        setisLoading(true);
         const note = document.getElementById('editForm');
         const formData = new FormData(note);
         const obj = Object.fromEntries(formData.entries());
@@ -87,13 +99,17 @@ const NoteState = (props) => {
             console.log(error);
         }
         console.log(response);
+        setalertMessage(response.msg);
+        setTimeout(() => {
+            setalertMessage(null);
+        }, 1500);
         document.getElementById('editText').value = '';
         document.getElementById('editTitle').value = '';
         fetchAllNotes();
     }
 
     return (
-        <noteContext.Provider value={{ notesList, editNoteId, fetchAllNotes, deleteNote, editNote, openEditModal, addNote}}>
+        <noteContext.Provider value={{ notesList, editNoteId, isLoading, alertMessage, fetchAllNotes, deleteNote, editNote, openEditModal, addNote}}>
             {props.children}
         </noteContext.Provider>
     )
